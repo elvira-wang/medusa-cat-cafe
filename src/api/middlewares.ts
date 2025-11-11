@@ -4,6 +4,8 @@ import {
 } from "@medusajs/framework/http";
 import { PostCustomPriceSchema } from "./store/variants/[id]/price/validators";
 import { PostAddCustomLineItemSchema } from "./store/carts/[id]/line-iems-custom/route";
+import { PostCreateCustomerSchema } from "./commerce-modules/customer/create-customer/validators";
+import { authenticate } from "@medusajs/medusa";
 
 export default defineMiddlewares({
 	routes: [
@@ -17,6 +19,16 @@ export default defineMiddlewares({
 			methods: ["POST"],
 			middlewares: [
 				validateAndTransformBody(PostAddCustomLineItemSchema),
+			],
+		},
+		{
+			matcher: "/commerce-modules/customer/create-customer",
+			methods: ["POST"],
+			middlewares: [
+				validateAndTransformBody(PostCreateCustomerSchema),
+				authenticate("customer", ["session", "bearer"], {
+					allowUnregistered: true,
+				}),
 			],
 		},
 	],
