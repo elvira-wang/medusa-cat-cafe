@@ -23,7 +23,7 @@ module.exports = defineConfig({
                         id: "manual" // fulfillment_provider 表中的 id = [service中的identifier]_[此处注册的id]。所以系统 default fulfillment provider的 id 为：manual_manual
                     },
                     // {
-                    //     resolve: "./src/providers/4px-fulfillment",
+                    //     resolve: "./src/modules/4px-fulfillment",
                     //     id: "fourpx",
                     //     options: {
                     //         appKey: process.env.FOURPX_APP_KEY,

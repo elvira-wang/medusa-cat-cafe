@@ -61,6 +61,13 @@ class FourPXProviderService extends AbstractFulfillmentProviderService {
         await this.client.cancel(external_id);
     }
 
+    /**
+     *
+     * @param data order_shipping_method 表中的 data 字段。
+     * @param items 本次 fulfillment 要发的商品项，
+     * @param order
+     * @param fulfillment
+     */
     async createFulfillment(
         data: Record<string, unknown>,
         items: Partial<Omit<FulfillmentItemDTO, "fulfillment">>[],
