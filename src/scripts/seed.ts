@@ -131,7 +131,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
     },
   });
 
-  logger.info("Seeding fulfillment data...");
+  logger.info("Seeding third-party-fulfillment data...");
   const shippingProfiles = await fulfillmentModuleService.listShippingProfiles({
     type: "default"
   })
@@ -281,7 +281,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
       },
     ],
   });
-  logger.info("Finished seeding fulfillment data.");
+  logger.info("Finished seeding third-party-fulfillment data.");
 
   await linkSalesChannelsToStockLocationWorkflow(container).run({
     input: {
