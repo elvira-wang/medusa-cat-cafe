@@ -1,11 +1,25 @@
+import type {
+  FulfillmentDTO,
+  FulfillmentItemDTO,
+  FulfillmentOrderDTO,
+} from "@medusajs/framework/types";
+
+export type CreateOrderData = {
+  data: Record<string, unknown>;
+  items: Partial<Omit<FulfillmentItemDTO, "fulfillment">>[];
+  order: Partial<FulfillmentOrderDTO> | undefined;
+  fulfillment: Partial<Omit<FulfillmentDTO, "provider_id" | "data" | "items">>;
+};
+
 export type ListProductsResponse = {
   logistics_product_id: string;
   logistics_product_code: string;
   logistics_product_name: string;
+  carrier_id: string;
 }[];
 
 export interface BaseDriver {
-  createOrder(data: any): Promise<any>;
+  createOrder(data: CreateOrderData): Promise<any>;
 
   getOrder(data: any): Promise<any>;
 

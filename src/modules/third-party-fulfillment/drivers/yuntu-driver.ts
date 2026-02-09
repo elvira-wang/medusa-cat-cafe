@@ -11,6 +11,8 @@ type Options = {
 export class YuntuDriver implements BaseDriver {
   protected options_: Options;
   protected client: YuntuClient;
+  static CARRIER_ID = "yuntu";
+  static CARRIER_NAME = "云途";
 
   constructor(options: Options) {
     this.options_ = options;
@@ -36,10 +38,13 @@ export class YuntuDriver implements BaseDriver {
 
   async listLogisticsProducts(data?: any): Promise<ListProductsResponse> {
     const res = await this.client.listLogisticsProducts();
-    return res.map((product: any) => ({
-      logistics_product_id: `yuntu_${product.code}`,
-      logistics_product_code: product.code,
-      logistics_product_name: `云途-${product.name}`,
+    const carrierId = YuntuDriver.CARRIER_ID;
+    const carrierName = YuntuDriver.CARRIER_NAME;
+    return res.map((product) => ({
+      logistics_product_id: `${carrierId}_${product.product_code}`,
+      logistics_product_code: product.product_code,
+      logistics_product_name: `${carrierName}-${product.product_name}`,
+      carrier_id: carrierId,
     }));
   }
 

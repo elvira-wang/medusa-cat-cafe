@@ -24,14 +24,14 @@
           "nullable": false,
           "mappedType": "text"
         },
-        "logistics_product": {
-          "name": "logistics_product",
-          "type": "jsonb",
+        "logistics_product_code": {
+          "name": "logistics_product_code",
+          "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "json"
+          "mappedType": "text"
         },
         "vat_no": {
           "name": "vat_no",
@@ -87,8 +87,8 @@
           "nullable": false,
           "mappedType": "json"
         },
-        "details": {
-          "name": "details",
+        "detail": {
+          "name": "detail",
           "type": "jsonb",
           "unsigned": false,
           "autoincrement": false,
@@ -129,29 +129,47 @@
           "mappedType": "datetime"
         }
       },
-      "name": "carriers_config",
+      "name": "carrier_config",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "IDX_carriers_config_carrier_id",
+          "keyName": "IDX_carrier_config_carrier_id",
           "columnNames": [],
           "composite": false,
           "constraint": false,
           "primary": false,
           "unique": false,
-          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_carriers_config_carrier_id\" ON \"carriers_config\" (carrier_id) WHERE deleted_at IS NULL"
+          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_carrier_config_carrier_id\" ON \"carrier_config\" (carrier_id) WHERE deleted_at IS NULL"
         },
         {
-          "keyName": "IDX_carriers_config_deleted_at",
+          "keyName": "IDX_carrier_config_logistics_product_code",
           "columnNames": [],
           "composite": false,
           "constraint": false,
           "primary": false,
           "unique": false,
-          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_carriers_config_deleted_at\" ON \"carriers_config\" (deleted_at) WHERE deleted_at IS NULL"
+          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_carrier_config_logistics_product_code\" ON \"carrier_config\" (logistics_product_code) WHERE deleted_at IS NULL"
         },
         {
-          "keyName": "carriers_config_pkey",
+          "keyName": "IDX_carrier_config_deleted_at",
+          "columnNames": [],
+          "composite": false,
+          "constraint": false,
+          "primary": false,
+          "unique": false,
+          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_carrier_config_deleted_at\" ON \"carrier_config\" (deleted_at) WHERE deleted_at IS NULL"
+        },
+        {
+          "keyName": "IDX_carrier_config_carrier_id_logistics_product_code_unique",
+          "columnNames": [],
+          "composite": false,
+          "constraint": false,
+          "primary": false,
+          "unique": false,
+          "expression": "CREATE UNIQUE INDEX IF NOT EXISTS \"IDX_carrier_config_carrier_id_logistics_product_code_unique\" ON \"carrier_config\" (carrier_id, logistics_product_code) WHERE deleted_at IS NULL"
+        },
+        {
+          "keyName": "carrier_config_pkey",
           "columnNames": [
             "id"
           ],
@@ -212,15 +230,6 @@
           "nullable": false,
           "mappedType": "integer"
         },
-        "quantity": {
-          "name": "quantity",
-          "type": "numeric",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "decimal"
-        },
         "currency": {
           "name": "currency",
           "type": "text",
@@ -233,15 +242,6 @@
         },
         "raw_unit_price": {
           "name": "raw_unit_price",
-          "type": "jsonb",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "json"
-        },
-        "raw_quantity": {
-          "name": "raw_quantity",
           "type": "jsonb",
           "unsigned": false,
           "autoincrement": false,

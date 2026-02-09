@@ -6,7 +6,6 @@ const CustomsDeclaration = model.define("customs_declaration", {
   name_cn: model.text(), // 中文报关名
   unit_price: model.bigNumber(), // 申报单价/美元
   unit_weight: model.number(), // 申报单重/克
-  quantity: model.bigNumber(), // 数量
   currency: model.text().default("USD"), // 币种
 });
 

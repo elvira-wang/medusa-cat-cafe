@@ -14,7 +14,18 @@ module.exports = defineConfig({
     },
   },
   modules: [
-    { resolve: "./src/modules/logistics" },
+    {
+      resolve: "./src/modules/logistics",
+      options: {
+        fpxAppKey: process.env.FOURPX_APP_KEY,
+        fpxAppSecret: process.env.FOURPX_APP_SECRET,
+        fpxBaseURL: process.env.FOURPX_BASE_URL,
+        yuntuAppId: process.env.YUNTU_APP_ID,
+        yuntuAppSecret: process.env.YUNTU_APP_SECRET,
+        yuntuSourceKey: process.env.YUNTU_SOURCE_KEY,
+        yuntuBaseURL: process.env.YUNTU_BASE_URL,
+      },
+    },
     {
       resolve: "@medusajs/medusa/fulfillment",
       options: {
@@ -32,6 +43,7 @@ module.exports = defineConfig({
           //             //         baseURL: process.env.FOURPX_API_URL, //TODO: change to production URL when go live
           //             //     }
           //             // }
+          { resolve: "./src/modules/test-fulfillment", id: "test-fulfillment" },
         ],
       },
     },

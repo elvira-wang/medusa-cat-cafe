@@ -11,8 +11,8 @@ export interface Create4pxOrderRequest {
   label_barcode?: string; // 面单条码（预分配号段的客户可传此值）
   return_info: ReturnInfo;
   parcel_list: ParcelList[];
-  is_insure: string;
-  insurance_info: InsuranceInfo;
+  is_insure: "Y" | "N"; // 是否投保（Y：投保；N：不投保）；默认值：N
+  insurance_info: InsuranceInfo; // 保险信息（投保时必须填写）
   sender: Sender;
   recipient_info: RecipientInfo;
   deliver_type_info: DeliverTypeInfo;
@@ -49,9 +49,9 @@ export interface LogisticsServiceInfo {
 
 /* 退件信息 */
 export interface ReturnInfo {
-  is_return_on_domestic: string; // 国内异常处理策略（Y：退件；N：销毁；U：其他-等待客户指令）；默认值：N
+  is_return_on_domestic: "Y" | "N" | "U"; // 国内异常处理策略（Y：退件；N：销毁；U：其他-等待客户指令）；默认值：N
   domestic_return_addr?: DomesticReturnAddr;
-  is_return_on_oversea: string; // 国外异常处理策略（Y：退件；N：销毁；U：其他-等待客户指令）；默认值：N
+  is_return_on_oversea: "Y" | "N" | "U"; // 国外异常处理策略（Y：退件；N：销毁；U：其他-等待客户指令）；默认值：N
   oversea_return_addr?: OverseaReturnAddr;
 }
 
@@ -96,7 +96,7 @@ export interface ParcelList {
   width?: number;
   height?: number;
   parcel_value: number;
-  currency: string;
+  currency: string; // 包裹申报价值币别（按照ISO标准三字码；支持的币种，根据物流产品+收件人国家配置；币种需和进出口国申报币种一致）
   include_battery: string;
   battery_type?: string;
   product_list?: ProductList[]; // 即将废弃
@@ -132,12 +132,12 @@ export interface DeclareProductInfo {
   country_import?: string;
   hscode_export?: string;
   hscode_import?: string;
-  declare_unit_price_export: number;
-  currency_export: string;
-  declare_unit_price_import: number;
-  currency_import: string;
-  brand_export: string;
-  brand_import: string;
+  declare_unit_price_export: number; // 出口国/起始国/发件人国家_申报单价（按对应币别的法定单位，最多2位小数点）
+  currency_export: string; // 出口国/起始国/发件人国家_申报单价币种（按照ISO标准；支持的币种，根据物流产品+收件人国家配置；币种需和进口国申报币种一致）
+  declare_unit_price_import: number; // 进口国/目的国/收件人国家_申报单价（按对应币别的法定单位，最多2位小数点）
+  currency_import: string; // 进口国/目的国/收件人国家_申报单价币种（按照ISO标准；支持的币种，根据物流产品+收件人国家配置；币种需和出口国申报币种一致）
+  brand_export: string; // 出口国/起始国/发件人国家_品牌(必填；若无，填none即可)
+  brand_import: string; // 进口国/目的国/收件人国家_品牌(必填；若无，填none即可)
   sales_url?: string;
   package_remarks?: string;
 }
@@ -261,7 +261,7 @@ export interface OrderAttachmentInfo {
   file_url?: string; // 文件的URL链接
   file_type?: string; // 文件类型，如 pdf、jpg 等
   attachment_format?: string; // 附件格式（url、base64）
-  attachment_type: string; // 附件类型 1|2（1:商业发票 2:交易图片）
+  attachment_type: "1" | "2"; // 附件类型 1|2（1:商业发票 2:交易图片）。文档非必填，实际必填
 }
 
 export interface PaymentInfo {
