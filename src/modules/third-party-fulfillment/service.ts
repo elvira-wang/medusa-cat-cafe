@@ -33,7 +33,7 @@ type shippingOptionData = {
   carrier_id: string;
 };
 
-class FourPXProviderService extends AbstractFulfillmentProviderService {
+class ThirdPartyFulfillmentProviderService extends AbstractFulfillmentProviderService {
   static identifier = "fourpx";
   protected logger_: Logger;
   protected options_: Options;
@@ -181,4 +181,4 @@ class FourPXProviderService extends AbstractFulfillmentProviderService {
     throw Error();
   }
 }
-export default FourPXProviderService;
+export default ThirdPartyFulfillmentProviderService;
