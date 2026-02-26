@@ -9,19 +9,26 @@ import type {
   Logger,
 } from "@medusajs/framework/types";
 import { AbstractFulfillmentProviderService } from "@medusajs/utils";
+import type LogisticsModuleService from "../logistics/service";
 
-type InjectedDependencies = { logger: Logger };
+type InjectedDependencies = {
+  logger: Logger;
+  logistics: LogisticsModuleService;
+};
 
 class TestFulfillmentProviderService extends AbstractFulfillmentProviderService {
   static identifier = "test-fulfillment";
   protected logger_: Logger;
+  protected logistics_: LogisticsModuleService;
 
-  constructor(
-    { logger }: InjectedDependencies,
-    options: Record<string, unknown>
-  ) {
+  constructor(c: InjectedDependencies, options: Record<string, unknown>) {
+    for (const injectedDependency of c) {
+      console.log(injectedDependency, "ccc");
+    }
+    console.log("Initializing TestFulfillmentProviderService with options:", c);
     super(...arguments);
-    this.logger_ = logger;
+    this.logger_ = c.logger;
+    this.logistics_ = c.logistics;
   }
 
   async canCalculate(data: CreateShippingOptionDTO): Promise<boolean> {
@@ -84,7 +91,11 @@ class TestFulfillmentProviderService extends AbstractFulfillmentProviderService 
     this.logger_.info(`本次发货的商品项: ${JSON.stringify(items)}`);
     this.logger_.info(`本次发货上下文： ${JSON.stringify(fulfillment)}`);
     const { carrier_id } = data;
-    const itemsList = items.map((item) => item.sku).join(", ");
+    // const itemsList = items.map((item) => item.sku).join(", ");
+    const config = await this.logistics_.listCarrierConfigs({ carrier_id });
+    if (!config.length) {
+      throw new Error(`No carrier config found for carrier_id: ${carrier_id}`);
+    }
     if (!carrier_id) {
       const { shipping_option_id } = fulfillment;
       throw new Error("Carrier ID is required");
@@ -93,11 +104,13 @@ class TestFulfillmentProviderService extends AbstractFulfillmentProviderService 
     // Simulate fulfillment creation
     if (carrier_id === "Gabriel") {
       this.logger_.info(
-        `🎉 Fulfillment created with Gabriel's Paradise Line. items:${itemsList}`
+        // `🎉 Fulfillment created with Gabriel's Paradise Line. items:${itemsList}`
+        `🎉 Fulfillment created with Gabriel's Paradise Line. Config: ${JSON.stringify(config)}`
       );
     } else if (carrier_id === "Lucifer") {
       this.logger_.info(
-        `🎉 Fulfillment created with Lucifer's Hell Line. Items:${itemsList}`
+        // `🎉 Fulfillment created with Lucifer's Hell Line. Items:${itemsList}`
+        `🎉 Fulfillment created with Lucifer's Hell Line. Config: ${JSON.stringify(config)}`
       );
     } else {
       this.logger_.warn(

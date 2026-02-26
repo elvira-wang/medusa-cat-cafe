@@ -46,6 +46,7 @@ module.exports = defineConfig({
           { resolve: "./src/modules/test-fulfillment", id: "test-fulfillment" },
         ],
       },
+      dependencies: ["logistics"],
     },
     // {
     //     resolve: "./src/modules/message",
