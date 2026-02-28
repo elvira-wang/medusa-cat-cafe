@@ -10,11 +10,16 @@ import type {
   Logger,
 } from "@medusajs/framework/types";
 import { MedusaError } from "@medusajs/framework/utils";
+import type { DAL } from "@medusajs/types";
 import { AbstractFulfillmentProviderService } from "@medusajs/utils";
+import type { ShippingOption } from "../../../.medusa/types/query-entry-points";
 import { FourPXDriver } from "./drivers/4px-driver";
 import { YuntuDriver } from "./drivers/yuntu-driver";
 
-type InjectedDependencies = { logger: Logger };
+type InjectedDependencies = {
+  logger: Logger;
+  shippingOptionRepository: DAL.RepositoryService<ShippingOption>;
+};
 
 type Options = {
   fpxAppKey: string;
@@ -150,7 +155,17 @@ class ThirdPartyFulfillmentProviderService extends AbstractFulfillmentProviderSe
     order: Partial<FulfillmentOrderDTO> | undefined,
     fulfillment: Partial<Omit<FulfillmentDTO, "provider_id" | "data" | "items">>
   ): Promise<CreateFulfillmentResult> {
-    const { carrier_id } = data;
+    const { carrier_id } = data; // 当后台手动修改 shipping method 时，data 字段为空，此时无法获取 carrier_id。需要从 fulfillment 的 shipping_option_id 反查 shipping option 获取 carrier_id。
+    if (!carrier_id) {
+      const { shipping_option_id } = fulfillment;
+      if (!shipping_option_id) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_FOUND,
+          `Carrier ID is required to create fulfillment.`
+        );
+      }
+      // const optionData = await
+    }
     const medusaData = { data, items, order, fulfillment };
     const driver = this.driverMap[carrier_id as string];
     if (!driver) {
@@ -166,10 +181,7 @@ class ThirdPartyFulfillmentProviderService extends AbstractFulfillmentProviderSe
   async retrieveDocuments(
     fulfillmentData: any,
     documentType: any
-  ): Promise<void> {
-    // assuming the client retrieves documents
-    // from a third-party service
-  }
+  ): Promise<void> {}
 
   async getReturnDocuments(data: any): Promise<never[]> {
     throw Error();

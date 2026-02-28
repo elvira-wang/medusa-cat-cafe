@@ -53,7 +53,7 @@ async validateFulfillmentData(
 }
 ```
  - 调用时机：该方法在前台用户结算流程进行到选择 shipping method 时被调用。Medusa 前台模板默认结算流程大致为：进入 checkout 页面>选择 shipping method>选择payment>确认下单。
- - 数据流向：该方法接收 shipping_option 的 data 字段（即 getFulfillmentOptions 方法返回值存入的 data 字段）和将要写入  cart_shipping_method 表的数据（后续会由 order_shipping_method 表继承）以及购物车上下文。返回值会被写入 cart_shipping_method 表的 data 字段并被 order_shipping_method 表的 data 字段继承。
+ - 数据流向：该方法接收 shipping_option 的 data 字段（即 getFulfillmentOptions 方法返回值存入的 data 字段）和将要写入 cart_shipping_method 表的数据（后续会由 order_shipping_method 表继承）以及购物车上下文。返回值会被写入 cart_shipping_method 表的 data 字段并被 order_shipping_method 表的 data 字段继承。
  - 注意事项：目前测试该方法不会在后台管理员 create fulfillment 时被调用。亦即，后台如果更换物流配送方式（shipping method），既不会在 order_shipping_method 表中创建新纪录，也不会传递旧的 order_shipping_method 的 data 字段作为 method data，也不会在内存中创建一个新的order_shipping_method 实例来储存新的 method data 作为 validateFulfillmentData 的第二个参数。简言之，如果更换物流配送方式，从 option data 到 method data 的数据流会被跳过，导致物流产品编码和物流商编码等信息无法被正确传递。
  - 解决方案：设想是取 createFulfillment 的 fulfillment 参数中的 shipping_option_id，去 shipping_option 表中查询 data 字段，获取在
    创建 shipping option 阶段存入的第三方物流商信息。但由于 Medusa 的 module 严格隔离设计理念，不支持在第三方物流履约模块中直接访问 fulfillment 模块或注入相关服务。因此考虑是否可以通过向 fulfillment 模块发送 API 请求的方式获取 shipping option data。

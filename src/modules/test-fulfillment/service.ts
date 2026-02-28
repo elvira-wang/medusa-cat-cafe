@@ -14,21 +14,24 @@ import type LogisticsModuleService from "../logistics/service";
 type InjectedDependencies = {
   logger: Logger;
   logistics: LogisticsModuleService;
+  fulfillmentModuleService: any; // Replace with actual type if available
 };
 
 class TestFulfillmentProviderService extends AbstractFulfillmentProviderService {
   static identifier = "test-fulfillment";
   protected logger_: Logger;
   protected logistics_: LogisticsModuleService;
+  protected fulfillmentModuleService_: any; // Replace with actual type if available
 
   constructor(c: InjectedDependencies, options: Record<string, unknown>) {
-    for (const injectedDependency of c) {
-      console.log(injectedDependency, "ccc");
-    }
-    console.log("Initializing TestFulfillmentProviderService with options:", c);
+    // // 遍历 InjectedDependencies 的所有值
+    // for (const dep of Object.values(c)) {
+    //   console.log("Injected dependency value:", dep);
+    // }
     super(...arguments);
     this.logger_ = c.logger;
     this.logistics_ = c.logistics;
+    this.fulfillmentModuleService_ = c.fulfillmentModuleService;
   }
 
   async canCalculate(data: CreateShippingOptionDTO): Promise<boolean> {
@@ -88,18 +91,38 @@ class TestFulfillmentProviderService extends AbstractFulfillmentProviderService 
     this.logger_.info(
       `Creating fulfillment with method data: ${JSON.stringify(data)}`
     );
-    this.logger_.info(`本次发货的商品项: ${JSON.stringify(items)}`);
-    this.logger_.info(`本次发货上下文： ${JSON.stringify(fulfillment)}`);
-    const { carrier_id } = data;
-    // const itemsList = items.map((item) => item.sku).join(", ");
-    const config = await this.logistics_.listCarrierConfigs({ carrier_id });
-    if (!config.length) {
-      throw new Error(`No carrier config found for carrier_id: ${carrier_id}`);
-    }
+    // this.logger_.info(`本次发货的商品项: ${JSON.stringify(items)}`);
+    // this.logger_.info(`本次发货上下文： ${JSON.stringify(fulfillment)}`);
+    let carrier_id = data.carrier_id;
     if (!carrier_id) {
       const { shipping_option_id } = fulfillment;
+      const shippingOption =
+        await this.fulfillmentModuleService_.retrieveShippingOption(
+          shipping_option_id
+        );
+      console.log("Shipping option retrieved:", shippingOption);
+      if (!shippingOption) {
+        throw new Error(
+          `Shipping option not found for id: ${shipping_option_id}`
+        );
+      }
+      const shippingOptionData = shippingOption.data;
+      console.log("Shipping option data retrieved:", shippingOptionData);
+      if (!shippingOptionData || Object.keys(shippingOptionData).length === 0) {
+        throw new Error(
+          `Shipping option data is empty for id: ${shipping_option_id}`
+        );
+      }
+      carrier_id = shippingOptionData.carrier_id;
+      console.log("Carrier ID 已取出:", carrier_id);
+    }
+    if (!carrier_id) {
       throw new Error("Carrier ID is required");
     }
+    const config = await this.logistics_.listCarrierConfigs({ carrier_id });
+    // if (!config.length) {
+    //   throw new Error(`No carrier config found for carrier_id: ${carrier_id}`);
+    // }
 
     // Simulate fulfillment creation
     if (carrier_id === "Gabriel") {

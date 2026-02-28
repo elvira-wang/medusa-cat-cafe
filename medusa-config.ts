@@ -34,15 +34,19 @@ module.exports = defineConfig({
             resolve: "@medusajs/medusa/fulfillment-manual",
             id: "manual", // fulfillment_provider 表中的 id = [service中的identifier]_[此处注册的id]。所以系统 default third-party-fulfillment provider的 id 为：manual_manual
           },
-          //             // {
-          //             //     resolve: "./src/modules/third-party-fulfillment",
-          //             //     id: "third-party-fulfillment",
-          //             //     options: {
-          //             //         appKey: process.env.FOURPX_APP_KEY,
-          //             //         appSecret: process.env.FOURPX_APP_SECRET,
-          //             //         baseURL: process.env.FOURPX_API_URL, //TODO: change to production URL when go live
-          //             //     }
-          //             // }
+          // {
+          //   resolve: "./src/modules/third-party-fulfillment",
+          //   id: "third-party-fulfillment",
+          //   options: {
+          //     fpxAppKey: process.env.FOURPX_APP_KEY,
+          //     fpxAppSecret: process.env.FOURPX_APP_SECRET,
+          //     fpxBaseURL: process.env.FOURPX_API_URL, //TODO: change to production URL when go live
+          //     yuntuAppId: process.env.YUNTU_APP_ID,
+          //     yuntuAppSecret: process.env.YUNTU_APP_SECRET,
+          //     yuntuSourceKey: process.env.YUNTU_SOURCE_KEY,
+          //     yuntuBaseURL: process.env.YUNTU_BASE_URL, //TODO: change to production URL when go live
+          //   },
+          // },
           { resolve: "./src/modules/test-fulfillment", id: "test-fulfillment" },
         ],
       },
