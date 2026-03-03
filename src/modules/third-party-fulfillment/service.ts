@@ -7,18 +7,19 @@ import type {
   FulfillmentItemDTO,
   FulfillmentOption,
   FulfillmentOrderDTO,
+  IFulfillmentModuleService,
   Logger,
 } from "@medusajs/framework/types";
 import { MedusaError } from "@medusajs/framework/utils";
-import type { DAL } from "@medusajs/types";
 import { AbstractFulfillmentProviderService } from "@medusajs/utils";
-import type { ShippingOption } from "../../../.medusa/types/query-entry-points";
+import type LogisticsModuleService from "../logistics/service";
 import { FourPXDriver } from "./drivers/4px-driver";
 import { YuntuDriver } from "./drivers/yuntu-driver";
 
 type InjectedDependencies = {
   logger: Logger;
-  shippingOptionRepository: DAL.RepositoryService<ShippingOption>;
+  logistics: LogisticsModuleService;
+  fulfillmentModuleService: IFulfillmentModuleService;
 };
 
 type Options = {
@@ -35,21 +36,25 @@ type shippingOptionData = {
   id: string;
   name: string;
   logistics_product_code: string;
-  carrier_id: string;
+  carrier_id: unknown;
 };
 
 class ThirdPartyFulfillmentProviderService extends AbstractFulfillmentProviderService {
   static identifier = "fourpx";
   protected logger_: Logger;
   protected options_: Options;
+  protected logistics_: LogisticsModuleService;
+  protected fulfillmentModuleService_: IFulfillmentModuleService;
   protected fpxDriver: FourPXDriver;
   protected yuntuDriver: YuntuDriver;
   private driverMap: Record<string, FourPXDriver | YuntuDriver>;
 
-  constructor({ logger }: InjectedDependencies, options: Options) {
+  constructor(deps: InjectedDependencies, options: Options) {
     super(...arguments);
-    this.logger_ = logger;
+    this.logger_ = deps.logger;
     this.options_ = options;
+    this.logistics_ = deps.logistics;
+    this.fulfillmentModuleService_ = deps.fulfillmentModuleService;
     this.fpxDriver = new FourPXDriver({
       fpxAppKey: options.fpxAppKey,
       fpxAppSecret: options.fpxAppSecret,
@@ -154,18 +159,28 @@ class ThirdPartyFulfillmentProviderService extends AbstractFulfillmentProviderSe
     items: Partial<Omit<FulfillmentItemDTO, "fulfillment">>[],
     order: Partial<FulfillmentOrderDTO> | undefined,
     fulfillment: Partial<Omit<FulfillmentDTO, "provider_id" | "data" | "items">>
-  ): Promise<CreateFulfillmentResult> {
-    const { carrier_id } = data; // 当后台手动修改 shipping method 时，data 字段为空，此时无法获取 carrier_id。需要从 fulfillment 的 shipping_option_id 反查 shipping option 获取 carrier_id。
-    if (!carrier_id) {
-      const { shipping_option_id } = fulfillment;
-      if (!shipping_option_id) {
-        throw new MedusaError(
-          MedusaError.Types.NOT_FOUND,
-          `Carrier ID is required to create fulfillment.`
-        );
-      }
-      // const optionData = await
+  ): Promise<any> {
+    let carrier_id = data.carrier_id; // 当后台手动修改 shipping method 时，data 字段为空，此时无法获取 carrier_id。需要从 fulfillment 的 shipping_option_id 反查 shipping option 获取 carrier_id。
+    let logistics_product_code = data.logistics_product_code;
+    if (!carrier_id || !logistics_product_code) {
+      const res = await this.findCarrierAndProduct(fulfillment);
+      carrier_id = res.carrier_id;
+      logistics_product_code = res.logistics_product_code;
     }
+
+    const carrierConfig = await this.logistics_.getConfigByCarrierAndProduct(
+      carrier_id as string,
+      logistics_product_code as string
+    );
+    const productTypeIds = await this.findProductTypeIds(items, order);
+    const customsDeclarationTemplates =
+      await this.logistics_.listCustomsDeclaration(productTypeIds);
+
+    const logisticsData = {
+      carrierConfig,
+      logistics_product_code,
+      customsDeclarationTemplates,
+    };
     const medusaData = { data, items, order, fulfillment };
     const driver = this.driverMap[carrier_id as string];
     if (!driver) {
@@ -174,8 +189,12 @@ class ThirdPartyFulfillmentProviderService extends AbstractFulfillmentProviderSe
         `No support driver for carrier_id: ${carrier_id}. Please make sure the carrier_id is correct.`
       );
     }
-    const response = await driver.createOrder(medusaData);
-    return response;
+    const response = await driver.createOrder(medusaData, logisticsData);
+    return {
+      data: {
+        ...response,
+      },
+    };
   }
 
   async retrieveDocuments(
@@ -191,6 +210,78 @@ class ThirdPartyFulfillmentProviderService extends AbstractFulfillmentProviderSe
     // assuming the client retrieves documents
     // from a third-party service
     throw Error();
+  }
+
+  private async findCarrierAndProduct(
+    fulfillment: Partial<Omit<FulfillmentDTO, "provider_id" | "data" | "items">>
+  ) {
+    const { shipping_option_id } = fulfillment;
+    if (!shipping_option_id) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_FOUND,
+        `Shipping option id is missing in fulfillment data. Please make sure to provide shipping_option_id when creating fulfillment.`
+      );
+    }
+    const shippingOption =
+      await this.fulfillmentModuleService_.retrieveShippingOption(
+        shipping_option_id
+      );
+    if (!shippingOption) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_FOUND,
+        `Shipping option not found for id: ${shipping_option_id}`
+      );
+    }
+    const shippingOptionData = shippingOption.data;
+    if (!shippingOptionData || Object.keys(shippingOptionData).length === 0) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_FOUND,
+        `Shipping option data is empty for id: ${shipping_option_id}`
+      );
+    }
+    const carrier_id = shippingOptionData.carrier_id;
+    const logistics_product_code = shippingOptionData.logistics_product_code;
+    if (
+      carrier_id === null ||
+      carrier_id === undefined ||
+      logistics_product_code === null ||
+      logistics_product_code === undefined
+    ) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_FOUND,
+        `Carrier ID is missing in shipping option data for id: ${shipping_option_id}. Please make sure the shipping option data has carrier_id.`
+      );
+    }
+    return { carrier_id, logistics_product_code };
+  }
+
+  private async findProductTypeIds(
+    items: Partial<Omit<FulfillmentItemDTO, "fulfillment">>[],
+    order: Partial<FulfillmentOrderDTO> | undefined
+  ) {
+    const productTypeIds = new Set<string>();
+    if (!order || !order.items) {
+      return [];
+    }
+    const itemTypeMap = new Map<string, string>();
+    order.items.forEach((orderItem) => {
+      if (orderItem.id && orderItem.product_type_id) {
+        itemTypeMap.set(orderItem.id, orderItem.product_type_id);
+      } else {
+        this.logger_.warn(
+          `Order item with id ${orderItem.id} is missing product_type_id. This item will be skipped when finding product types for customs declaration.`
+        );
+      } // TODO: 是否需要日志记录缺失 product_type_id 的订单项或报错处理
+    });
+    items.forEach((item) => {
+      if (item.line_item_id) {
+        const productTypeId = itemTypeMap.get(item.line_item_id);
+        if (productTypeId) {
+          productTypeIds.add(productTypeId);
+        }
+      }
+    });
+    return Array.from(productTypeIds);
   }
 }
 export default ThirdPartyFulfillmentProviderService;

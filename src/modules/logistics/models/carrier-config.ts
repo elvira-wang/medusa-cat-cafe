@@ -22,9 +22,8 @@ const CarrierConfig = model
      */
     mid: model.text().nullable(),
     /**
-     * 寄件人信息 - 中英文版本
+     * 寄件人信息
      */
-    sender_cn: model.json(),
     sender_en: model.json(),
     /**
      * 不同物流商个性化配置

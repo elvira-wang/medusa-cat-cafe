@@ -1,5 +1,10 @@
 import { YuntuClient } from "../clients/yuntu-client";
-import { BaseDriver, ListProductsResponse } from "./base-driver";
+import { DeclarationInfo } from "../types/yuntu-types";
+import type {
+  BaseDriver,
+  CreateOrderData,
+  ListProductsResponse,
+} from "./base-driver";
 
 type Options = {
   yuntuAppId: string;
@@ -9,10 +14,10 @@ type Options = {
 };
 
 export class YuntuDriver implements BaseDriver {
-  protected options_: Options;
-  protected client: YuntuClient;
   static CARRIER_ID = "yuntu";
   static CARRIER_NAME = "云途";
+  protected options_: Options;
+  protected client: YuntuClient;
 
   constructor(options: Options) {
     this.options_ = options;
@@ -24,7 +29,23 @@ export class YuntuDriver implements BaseDriver {
     });
   }
 
-  async createOrder(data: any): Promise<any> {}
+  async createOrder(
+    medusaData: CreateOrderData,
+    logisticsData: any
+  ): Promise<any> {
+    const { data, items, order, fulfillment } = medusaData;
+    const {
+      carrierConfig,
+      logistics_product_code,
+      customsDeclarationTemplates,
+    } = logisticsData;
+    const receiver = {};
+    const packages = {};
+    const declarationInfo = {};
+    const payload = {
+      product_code: logistics_product_code,
+    };
+  }
 
   async getOrder(data: any): Promise<any> {}
 

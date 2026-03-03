@@ -196,7 +196,7 @@ export interface RecipientInfo {
   street: string;
   house_number?: string;
   second_name?: string; // 非必填，备用名字，一般用于有两个名字的国家，比如日本清关要求必需片假名
-  certificate_info: CertificateInfo;
+  certificate_info?: CertificateInfo;
 }
 
 export enum DeliverType {

@@ -11,6 +11,8 @@ export type CreateOrderData = {
   fulfillment: Partial<Omit<FulfillmentDTO, "provider_id" | "data" | "items">>;
 };
 
+export type LogisticsConfig = {};
+
 export type ListProductsResponse = {
   logistics_product_id: string;
   logistics_product_code: string;
@@ -19,7 +21,7 @@ export type ListProductsResponse = {
 }[];
 
 export interface BaseDriver {
-  createOrder(data: CreateOrderData): Promise<any>;
+  createOrder(medusaData: CreateOrderData, logisticsData: any): Promise<any>;
 
   getOrder(data: any): Promise<any>;
 

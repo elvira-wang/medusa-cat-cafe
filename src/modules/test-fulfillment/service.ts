@@ -91,8 +91,9 @@ class TestFulfillmentProviderService extends AbstractFulfillmentProviderService 
     this.logger_.info(
       `Creating fulfillment with method data: ${JSON.stringify(data)}`
     );
-    // this.logger_.info(`本次发货的商品项: ${JSON.stringify(items)}`);
-    // this.logger_.info(`本次发货上下文： ${JSON.stringify(fulfillment)}`);
+    this.logger_.info(`本次发货的商品项: ${JSON.stringify(items)}`);
+    this.logger_.info(`完整订单上下文： ${JSON.stringify(order)}`);
+    this.logger_.info(`本次发货上下文： ${JSON.stringify(fulfillment)}`);
     let carrier_id = data.carrier_id;
     if (!carrier_id) {
       const { shipping_option_id } = fulfillment;
